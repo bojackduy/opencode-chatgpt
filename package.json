@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "@bojackduy/opencode-chatgpt",
+  "version": "0.1.0",
+  "description": "OpenCode plugin that installs the chatgpt-proxy ChatGPT browser bridge with one line in the plugin array — managed binaries, provider + MCP config injection, Chrome CDP supervision.",
+  "type": "module",
+  "license": "AGPL-3.0-or-later",
+  "private": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bojackduy/opencode-chatgpt.git"
+  },
+  "keywords": [
+    "opencode",
+    "opencode-plugin",
+    "chatgpt",
+    "chatgpt-web",
+    "browser-bridge"
+  ],
+  "files": [
+    "dist",
+    "commands",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "bun": ">=1.1.0"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/server.js"
+    },
+    "./server": {
+      "import": "./dist/server.js"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build:server": "bun build src/server/plugin.ts --outfile dist/server.js --target bun --external @opencode-ai/plugin --external @opencode-ai/plugin/tool",
+    "build": "bun run build:server",
+    "clean": "rm -rf dist",
+    "prepack": "bun run typecheck && bun test && bun run build",
+    "test": "bun test",
+    "release:patch": "bun run typecheck && bun test && npm version patch -m \"chore: release %s\" && git push && git push origin $(git describe --tags --abbrev=0)",
+    "release:minor": "bun run typecheck && bun test && npm version minor -m \"chore: release %s\" && git push && git push origin $(git describe --tags --abbrev=0)",
+    "release:major": "bun run typecheck && bun test && npm version major -m \"chore: release %s\" && git push && git push origin $(git describe --tags --abbrev=0)"
+  },
+  "peerDependencies": {
+    "@opencode-ai/plugin": ">=1.4.0 <3"
+  },
+  "devDependencies": {
+    "@opencode-ai/plugin": "^1.18.30",
+    "@opencode/plugin": "^2.0.11",
+    "@types/bun": "^1.3.14",
+    "@types/node": "^26.2.0",
+    "typescript": "^5.7.0"
+  }
+}
