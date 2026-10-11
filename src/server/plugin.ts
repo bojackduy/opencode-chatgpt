@@ -9,11 +9,11 @@
 // hosts, so one build works on v1 AND v2. Both entries share the per-process
 // lifecycle in shared.ts — whichever host loads wins, never double-spawn.
 
-import type { Hooks, Plugin, PluginInput, PluginModule, PluginOptions } from "@opencode-ai/plugin"
+import type { Hooks, PluginInput, PluginModule, PluginOptions } from "@opencode-ai/plugin"
 import type { Plugin as V2Plugin } from "@opencode/plugin"
 import { tool } from "@opencode-ai/plugin/tool"
-import { ensureShared } from "./shared"
-import { applyChatGPTConfig } from "./config-shape"
+import { ensureShared, type SharedState } from "./shared"
+import { applyChatGPTConfig, MCP_ID } from "./config-shape"
 import {
   loginInstructions,
   probeReadiness,
@@ -23,22 +23,28 @@ import { setup as setupV2 } from "./v2"
 
 const PLUGIN_ID = "opencode-chatgpt"
 
-const server: Plugin = async (_input: PluginInput, pluginOptions: PluginOptions | undefined) => {
+const server = async (
+  _input: PluginInput,
+  pluginOptions: PluginOptions | undefined,
+  injected?: SharedState,
+): Promise<Hooks> => {
   // Background binary ensure + supervision, started once per process and
   // shared with the v2 setup path. Never blocks plugin setup on download.
-  const state = ensureShared(pluginOptions)
+  const state = injected ?? ensureShared(pluginOptions)
   const opts = state.opts
 
   const adapterBaseURL = `http://${opts.adapterHost}:${opts.adapterPort}/v1`
   const hooks: Hooks = {
     config: async (config) => {
-      // The MCP entry needs the managed proxy binary; until the download
-      // finishes, fall back to the conventional cache path for this platform.
-      // applyChatGPTConfig never clobbers user entries, so a stale fallback
-      // path is harmless — the next restart corrects it.
       const cfg = config as unknown as Record<string, any>
+      // v1 cannot reload the injected MCP command after a background download.
+      // Resolve it before registration; existing manual MCP entries need no wait.
+      if (cfg.mcp?.[MCP_ID] === undefined) {
+        await state.ready
+        if (!state.binaries) throw new Error(`Binaries not ready: ${state.binaryError ?? "download failed"}`)
+      }
       const added = applyChatGPTConfig(cfg, {
-        proxyBinary: state.binaries?.proxy ?? "<pending: chatgpt-proxy downloading>",
+        proxyBinary: state.binaries?.proxy ?? "",
         adapterBaseURL,
       })
       if (added.length > 0) {

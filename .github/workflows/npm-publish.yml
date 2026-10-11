@@ -1,0 +1,71 @@
+name: Publish npm package
+
+on:
+  push:
+    tags: ["v*.*.*"]
+  workflow_dispatch:
+
+concurrency:
+  group: npm-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+          package-manager-cache: false
+      - run: bun install --frozen-lockfile
+      - name: Verify release version and registry
+        id: package
+        shell: bash
+        run: |
+          name=$(jq -r .name package.json)
+          version=$(jq -r .version package.json)
+          if [ "$GITHUB_REF_TYPE" != tag ] || [ "$GITHUB_REF_NAME" != "v$version" ]; then
+            echo "::error::Select tag v$version; branch dispatches and mismatched versions are not releases"
+            exit 1
+          fi
+          # Only a registry E404 is absence; auth/network failures must stop publishing.
+          if npm view "$name@$version" version --json > registry-result.json 2> registry-error.log; then
+            echo "::error::$name@$version already published"
+            exit 1
+          elif ! jq -e '.error.code == "E404"' registry-result.json >/dev/null; then
+            cat registry-error.log
+            echo "::error::Unable to verify registry state"
+            exit 1
+          fi
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - name: Verify prepack lifecycle
+        run: npm pack --dry-run
+      - name: Publish with OIDC
+        run: npm publish --access public --provenance
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PACKAGE_NAME: ${{ steps.package.outputs.name }}
+          PACKAGE_VERSION: ${{ steps.package.outputs.version }}
+        run: |
+          notes=$(awk -v ver="$PACKAGE_VERSION" '
+            /^## / {
+              if (found) exit
+              if (index($0, "## " ver " ") == 1 || index($0, "## " ver "(") == 1) found=1
+              next
+            }
+            found { print }
+          ' CHANGELOG.md)
+          if [ -z "$notes" ]; then
+            notes="Published $PACKAGE_NAME@$PACKAGE_VERSION"
+          fi
+          gh release create "$GITHUB_REF_NAME" --verify-tag --title "$GITHUB_REF_NAME" --notes "$notes"

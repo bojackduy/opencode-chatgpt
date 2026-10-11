@@ -148,6 +148,7 @@ export function shouldCheckLogin(eventType: unknown, state: Pick<SharedState, "f
 /** Command executors share the v1 tool logic via tools.ts — no duplication. */
 export function buildV2CommandExecutions(
   state: SharedState,
+  login: typeof loginFlow = loginFlow,
 ): Record<string, (call: V2CommandCall) => Promise<string>> {
   const pending = (): string =>
     state.binaryError
@@ -156,7 +157,7 @@ export function buildV2CommandExecutions(
   return {
     [COMMAND_STATUS]: async () =>
       state.binaries ? statusReport(state.opts, state.binaries) : pending(),
-    [COMMAND_LOGIN]: async () => loginFlow(state.opts),
+    [COMMAND_LOGIN]: async () => login(state.opts),
     [COMMAND_DOCTOR]: async () =>
       state.binaries ? formatDoctor(await doctorReport(state.opts, state.binaries)) : pending(),
   }
@@ -196,11 +197,7 @@ export function registerV2Commands(
  * cache slot ensureBinaries() will fill (pure mapping), so the registered
  * MCP entry is usually already correct and reload() just retries connect. */
 function pendingProxyPath(version: string): string {
-  try {
-    return path.join(cacheDir(version), assetName("chatgpt-proxy", currentPlatform()))
-  } catch {
-    return "<pending: chatgpt-proxy downloading>"
-  }
+  return path.join(cacheDir(version), assetName("chatgpt-proxy", currentPlatform()))
 }
 
 async function consumeV2Events(

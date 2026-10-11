@@ -12,6 +12,7 @@ import {
   PROVIDER_ID,
 } from "../src/server/config-shape"
 import { resolveOptions } from "../src/server/options"
+import plugin from "../src/server/plugin"
 import { resetSharedForTests, type SharedState } from "../src/server/shared"
 import {
   buildV2CommandExecutions,
@@ -130,6 +131,42 @@ function fakeContext(
 }
 
 beforeEach(() => resetSharedForTests())
+
+describe("v1 first-install MCP resolution", () => {
+  test("waits for binaries before registering the actual MCP command", async () => {
+    const state = fakeState()
+    let finish!: () => void
+    state.ready = new Promise<void>((resolve) => { finish = resolve })
+    const hooks = await plugin.server({} as any, undefined, state)
+    const config: any = {}
+    const applying = hooks.config!(config)
+    expect(config.mcp).toBeUndefined()
+    state.binaries = { proxy: PROXY, openai: "/cache/adapter", version: "v0.1.0" }
+    finish()
+    await applying
+    expect(config.mcp.chatgpt.command).toEqual([PROXY])
+  })
+
+  test("failed downloads never register a fake command", async () => {
+    const state = fakeState()
+    state.binaryError = "release missing"
+    const hooks = await plugin.server({} as any, undefined, state)
+    const config: any = {}
+    await expect(hooks.config!(config)).rejects.toThrow("Binaries not ready: release missing")
+    expect(config.mcp).toBeUndefined()
+  })
+
+  test("existing manual MCP is preserved without waiting for managed binaries", async () => {
+    const state = fakeState()
+    state.ready = new Promise(() => {})
+    const hooks = await plugin.server({} as any, undefined, state)
+    const manual = { type: "local", command: ["/manual/proxy"] }
+    const config: any = { mcp: { chatgpt: manual } }
+    await hooks.config!(config)
+    expect(config.mcp.chatgpt).toBe(manual)
+    expect(config.provider[PROVIDER_ID]).toBeDefined()
+  })
+})
 
 // ─── Builder shapes ──────────────────────────────────────────────────────────
 
@@ -254,11 +291,16 @@ describe("v2 commands mirror the v1 tools", () => {
 
   test("command executions share the v1 pending-not-ready wording", async () => {
     const state = fakeState()
-    const exec = buildV2CommandExecutions(state)
+    const loginOptions: unknown[] = []
+    const exec = buildV2CommandExecutions(state, async (opts) => {
+      loginOptions.push(opts)
+      return "Chrome login (fake)"
+    })
     const call = { sessionID: "s", prompt: { text: "" }, delivery: "steer" as const}
     expect(await exec[COMMAND_STATUS]!(call)).toContain("Binaries still downloading")
     expect(await exec[COMMAND_DOCTOR]!(call)).toContain("Binaries still downloading")
     expect(await exec[COMMAND_LOGIN]!(call)).toContain("Chrome")
+    expect(loginOptions).toEqual([state.opts])
   })
 })
 
