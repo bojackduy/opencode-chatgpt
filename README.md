@@ -1,8 +1,8 @@
 # opencode-chatgpt
 
-Use **ChatGPT Web** — for free, through your own logged-in session, no API key —
-as an OpenCode model, installed with **one line** in your host's plugin config.
-No manual JSONC editing, no Go toolchain, no launchd units.
+Use **ChatGPT Web**, through your own logged-in session, as an OpenCode model.
+No API key or launchd units are needed; the default prebuilt mode needs no Go toolchain. ChatGPT account access,
+subscription requirements, and usage limits still apply; this does not bypass them.
 
 The plugin manages everything: it downloads the
 [chatgpt-proxy](https://github.com/bojackduy/chatgpt-proxy) binaries
@@ -11,6 +11,119 @@ injects the provider + MCP config, keeps the adapter and Chrome alive, and
 guides first-run login.
 
 ## Install
+
+**Publication status:** this npm package is not published yet, and the bridge's
+first GitHub release is still required for **prebuilt mode**. The default command
+below needs both distributions; source mode needs the npm package published and
+the chosen bridge commit pushed to GitHub, but no bridge binary release.
+
+```sh
+npx @bojackduy/opencode-chatgpt install
+```
+
+Prerequisites: **Node.js >=20 + npm**, **OpenCode v1 or v2**, **Bun >=1.1**
+([installation](https://bun.sh/docs/installation)), and **Chrome/Chromium**
+([Google Chrome](https://www.google.com/chrome/)). The installer itself runs in
+Node, while the plugin uses Bun. Set `CHROME_BIN` to an existing browser executable
+if its location is nonstandard. Neither browsers nor privileged services are installed.
+
+The installer detects `opencode --version`, adds only the matching npm plugin
+entry, and prepares **both** bridge binaries using release SHA-256 checksums
+before changing config. It preserves comments, plugin options, existing manual
+providers/MCP servers, and your default model. Existing registrations are
+idempotent; explicitly disabled entries are reported and never enabled.
+Existing files get a unique sibling `.bak` before an atomic replacement.
+Malformed/ambiguous config or missing releases fail safely without config changes.
+No source-build fallback is attempted.
+
+```sh
+# Preview exact config and required release assets, without spawning/downloading/writing:
+npx @bojackduy/opencode-chatgpt install --host v2 --dry-run
+# Explicit host/version detection override and exact config file:
+npx @bojackduy/opencode-chatgpt install --host v1 --config /path/to/opencode.jsonc
+```
+
+`--host` accepts `v1`, `v2`, or `auto` (default). Dry-run requires an explicit
+host because it does not execute `opencode`. Global config uses
+`OPENCODE_CONFIG_DIR`, otherwise `$XDG_CONFIG_HOME/opencode`, otherwise
+`~/.config/opencode` (OpenCode's XDG convention on Windows too, not `%APPDATA%`).
+If more than one global JSON/JSONC file exists, select one with `--config`.
+An existing ChatGPT entry under the wrong host's key requires migration rather
+than adding a duplicate. No uninstall/update wizard or detached adapter is created.
+
+Quit and restart OpenCode; select **`chatgpt-web/chatgpt-web`** in `/models`.
+The plugin registers this provider/model **at runtime**; the installer does not
+write manual model/provider/MCP definitions. On v2 run `/chatgpt-login` and
+`/chatgpt-doctor`; on v1 ask the agent to call `chatgpt-login` and `chatgpt-doctor`.
+Login once in the dedicated Chrome profile, not an API-key dialog.
+
+### Explicit source-build mode (test pushed fixes before a binary release)
+
+```sh
+npx @bojackduy/opencode-chatgpt install --build-from-source --bridge-ref <tag-or-commit>
+# Offline preview: no GitHub resolution, downloads, Go checks, processes or writes
+npx @bojackduy/opencode-chatgpt install --build-from-source --bridge-ref <tag-or-commit> --host v2 --dry-run
+```
+
+Replace `<tag-or-commit>` with a real GitHub tag or commit. Both flags are required
+together; there is no floating `main` default and no silent release-to-source fallback.
+The configured `releasesRepo` (default `bojackduy/chatgpt-proxy`) selects the source
+repository too. **Local/unpushed commits are not visible to this installer**:
+the local `cf04b8f` tool/math fixes must first be pushed to that GitHub repository.
+This feature does not push commits or publish the npm package for you.
+
+Source mode requires the normal **Node >=20, OpenCode, Bun >=1.1 and Chrome**
+prerequisites plus **Go compatible with the downloaded `go.mod`** and network access.
+Go's normal `GOTOOLCHAIN` policy is respected: with `auto`, a sufficiently recent
+Go launcher can download the required toolchain; with `local`, install a compatible
+Go yourself. Go dependencies may also require network access. The installer runs
+`go env GOVERSION` inside the downloaded module, then builds exactly
+`./cmd/chatgpt-openai` and `./cmd/proxy` for your local platform (Windows uses `.exe`).
+Source is user-selected executable code: trust the repository and ref. SHA-256
+cache hashes detect changed artifacts; they are **not authenticity signatures**.
+
+GitHub resolves the ref to a full immutable SHA before downloading its HTTPS
+archive. Both successful builds and their metadata live in a repository/SHA/platform
+cache. Only then is `bridgeSource: { "repo": "owner/repo", "commit": "<40-character-sha>" }`
+persisted in the existing v1 `[package, options]` tuple or v2 `{package, options}`
+object, preserving the package pin and other options. Reinstalling the same ref is
+idempotent. Dry-run shows the requested mode/ref; the final SHA cannot be shown
+without network access. At startup this option selects that exact verified cache,
+never `latest` releases or an unexpected compilation. A missing/changed cache
+fails with an actionable instruction to rerun the installer.
+
+**Quit and restart OpenCode after selecting a build.** Run `/chatgpt-doctor` (or the
+v1 tool) and verify the adapter process executable is the selected source-cache
+`chatgpt-openai` path, not merely that `/ready` works. The managed source adapter
+and MCP use the same selected binaries, Chrome port and profile arguments.
+An already occupied adapter port is reported as a potential independent-service
+or old-build conflict; the installer/plugin never kills it or overwrites its owner's
+launchd unit. Have the service owner stop/reconfigure it, then restart OpenCode.
+Existing manual MCP/provider entries are preserved, not silently replaced; check
+their paths separately if you retain them.
+
+### Why two repositories?
+
+These are independent distributions, not two repositories users must clone:
+
+```text
+npm: opencode-chatgpt (OpenCode plugin + installer)
+  -> GitHub release: chatgpt-proxy (checksum-verified Go executables)
+  -> Chrome DevTools Protocol (CDP), dedicated signed-in Chrome profile
+  -> ChatGPT Web, subject to the account's access and usage limits
+```
+
+[`opencode-chatgpt`](https://github.com/bojackduy/opencode-chatgpt) owns OpenCode
+integration: runtime model/MCP registration, commands, and process supervision.
+[`chatgpt-proxy`](https://github.com/bojackduy/chatgpt-proxy) owns the reusable Go
+bridge: `chatgpt-openai` exposes the OpenAI-compatible adapter;
+`chatgpt-proxy` exposes MCP browser tools. The bridge controls Chrome via CDP to
+send prompts and read replies from the logged-in web session. Plugin users
+download released executables automatically; they do **not** clone/build Go.
+The installer never launches these processes; the plugin supervises them only
+after OpenCode restarts.
+
+### Manual plugin registration (alternative)
 
 OpenCode v1 (`@opencode-ai/plugin` host):
 
@@ -77,7 +190,7 @@ Notes:
 
 ## First-run login
 
-1. Restart OpenCode — the plugin downloads the binaries and starts the adapter.
+1. Restart OpenCode — the plugin reuses prepared binaries (or downloads them after manual registration) and starts the adapter.
 2. On v2 run `/chatgpt-login`; on v1 ask the agent to call `chatgpt-login`: a Chrome window
    using the dedicated profile (`~/.chatgpt-proxy`) opens.
 3. Log into ChatGPT there **once** — the session persists in the profile.
@@ -101,6 +214,7 @@ want slash-command shortcuts; installing the npm package does not auto-copy them
 | ------------------ | ------------------------ | -------------------------------------------------------------- |
 | `releasesRepo`     | `bojackduy/chatgpt-proxy`| GitHub repo to download bridge binaries from (retarget forks)  |
 | `version`          | `latest`                 | Release tag to download, or `latest`                           |
+| `bridgeSource`     | unset                    | Installer-pinned `{repo, commit}` source cache; commit must be a full lowercase SHA. Overrides release selection, never builds at startup. |
 | `profileDir`       | `~/.chatgpt-proxy`       | Chrome profile dir holding the ChatGPT login                   |
 | `cdpPort`          | `9222`                   | Chrome remote-debugging port                                   |
 | `adapterAddr`      | `127.0.0.1:8788`         | Adapter listen address (`-addr`)                               |

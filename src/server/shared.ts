@@ -7,6 +7,7 @@
 import { resolveOptions, type ResolvedOptions } from "./options"
 import { ensureBinaries, type EnsuredBinaries } from "./binaries"
 import { startSupervisor, type Supervisor } from "./supervisor"
+import { sourceBinaries } from "./source"
 
 export interface SharedState {
   opts: ResolvedOptions
@@ -32,7 +33,7 @@ export function ensureShared(rawOptions: Record<string, unknown> | undefined): S
     ready: Promise.resolve(),
     firstRunNotified: false,
   }
-  state.ready = ensureBinaries({ releasesRepo: opts.releasesRepo, version: opts.version })
+  state.ready = (opts.bridgeSource ? sourceBinaries(opts.bridgeSource) : ensureBinaries({ releasesRepo: opts.releasesRepo, version: opts.version }))
     .then((binaries) => {
       state.binaries = binaries
       state.supervisor = startSupervisor(opts, binaries)

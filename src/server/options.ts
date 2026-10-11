@@ -3,8 +3,11 @@
 
 import * as os from "node:os"
 import * as path from "node:path"
+import { validateSource, type BridgeSource } from "./source"
 
 export interface ChatGPTPluginOptions {
+  /** Installer-pinned source build; startup only reads its verified cache. */
+  bridgeSource?: BridgeSource
   /** GitHub repo hosting chatgpt-proxy releases. Default "bojackduy/chatgpt-proxy". */
   releasesRepo?: string
   /** Release tag to download, or "latest". Default "latest". */
@@ -22,6 +25,7 @@ export interface ChatGPTPluginOptions {
 }
 
 export interface ResolvedOptions {
+  bridgeSource?: BridgeSource
   releasesRepo: string
   version: string
   profileDir: string
@@ -64,6 +68,7 @@ export function resolveOptions(raw?: Record<string, unknown>): ResolvedOptions {
       ? Math.floor(o.maxChars)
       : DEFAULTS.maxChars
   return {
+    ...(o.bridgeSource === undefined ? {} : { bridgeSource: validateSource(o.bridgeSource) }),
     releasesRepo:
       typeof o.releasesRepo === "string" && o.releasesRepo.trim() !== ""
         ? o.releasesRepo.trim()

@@ -45,6 +45,7 @@ const server = async (
       }
       const added = applyChatGPTConfig(cfg, {
         proxyBinary: state.binaries?.proxy ?? "",
+        proxyArgs: opts.bridgeSource ? ["-chrome-port", String(opts.cdpPort), "-profile", opts.profileDir] : [],
         adapterBaseURL,
       })
       if (added.length > 0) {

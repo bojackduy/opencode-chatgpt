@@ -183,6 +183,7 @@ interface SupervisedChild {
  */
 export function startSupervisor(opts: ResolvedOptions, binaries: { openai: string }): Supervisor {
   let stopped = false
+  let sourceConflictReported = false
   const children: SupervisedChild[] = []
   const logDir = path.join(os.homedir(), ".local", "share", "opencode-chatgpt", "logs")
 
@@ -263,6 +264,10 @@ export function startSupervisor(opts: ResolvedOptions, binaries: { openai: strin
         "-profile",
         opts.profileDir,
       ], env)
+      if (opts.bridgeSource) console.log(`[opencode-chatgpt] selected source adapter executable: ${binaries.openai}`)
+    } else if (opts.bridgeSource && !sourceConflictReported && !children.some(c => c.proc.spawnfile === binaries.openai && c.proc.exitCode === null)) {
+      sourceConflictReported = true
+      console.error(`[opencode-chatgpt] adapter port already occupied by an independently running process; selected source build is NOT verified as running: ${binaries.openai}. Ask the service owner to stop/reconfigure it, then restart OpenCode. No launchd/service was killed or overwritten.`)
     }
   }
 

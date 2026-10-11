@@ -18,6 +18,7 @@
     "browser-bridge"
   ],
   "files": [
+    "bin",
     "dist",
     "commands",
     "README.md",
@@ -29,7 +30,11 @@
     "provenance": true
   },
   "engines": {
+    "node": ">=20",
     "bun": ">=1.1.0"
+  },
+  "bin": {
+    "opencode-chatgpt": "./bin/opencode-chatgpt.mjs"
   },
   "exports": {
     ".": {
@@ -42,7 +47,8 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "build:server": "bun build src/server/plugin.ts --outfile dist/server.js --target bun --external @opencode-ai/plugin --external @opencode-ai/plugin/tool",
-    "build": "bun run build:server",
+    "build:installer": "bun build src/installer/install.ts --outfile dist/install.js --target node --external jsonc-parser",
+    "build": "bun run build:server && bun run build:installer",
     "clean": "rm -rf dist",
     "prepack": "bun run typecheck && bun test && bun run build",
     "test": "bun test",
@@ -59,5 +65,8 @@
     "@types/bun": "^1.3.14",
     "@types/node": "^26.2.0",
     "typescript": "^5.7.0"
+  },
+  "dependencies": {
+    "jsonc-parser": "^3.3.1"
   }
 }

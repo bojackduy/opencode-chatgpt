@@ -8,6 +8,7 @@ export const MODEL_ID = "chatgpt-web"
 export interface ChatGPTConfigContext {
   /** Managed chatgpt-proxy MCP binary path (spawned by opencode as a local MCP). */
   proxyBinary: string
+  proxyArgs?: string[]
   /** Base URL of the managed OpenAI-compatible adapter, e.g. http://127.0.0.1:8788/v1 */
   adapterBaseURL: string
 }
@@ -31,8 +32,8 @@ export function buildProviderEntry(adapterBaseURL: string): Record<string, unkno
   }
 }
 
-export function buildMcpEntry(proxyBinary: string): Record<string, unknown> {
-  return { type: "local", command: [proxyBinary], enabled: true }
+export function buildMcpEntry(proxyBinary: string, args: string[] = []): Record<string, unknown> {
+  return { type: "local", command: [proxyBinary, ...args], enabled: true }
 }
 
 /**
@@ -55,7 +56,7 @@ export function applyChatGPTConfig(
   config["provider"] = provider
   const mcp = (config["mcp"] ?? {}) as Record<string, unknown>
   if (mcp[MCP_ID] === undefined) {
-    mcp[MCP_ID] = buildMcpEntry(ctx.proxyBinary)
+    mcp[MCP_ID] = buildMcpEntry(ctx.proxyBinary, ctx.proxyArgs)
     added.push(`mcp.${MCP_ID}`)
   }
   config["mcp"] = mcp

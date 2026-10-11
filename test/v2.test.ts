@@ -132,6 +132,24 @@ function fakeContext(
 
 beforeEach(() => resetSharedForTests())
 
+test("pinned source uses exact cached MCP path and matching profile/CDP args on both hosts", async () => {
+  const state = fakeState()
+  state.opts = resolveOptions({ bridgeSource: { repo: "owner/bridge", commit: "a".repeat(40) }, cdpPort: 9333, profileDir: "/profile spaces" })
+  state.binaries = { openai: "/source/cache/adapter", proxy: "/source/cache/proxy", version: "source:" + "a".repeat(40) }
+  const command = [state.binaries.proxy, "-chrome-port", "9333", "-profile", "/profile spaces"]
+  const hooks = await plugin.server({} as any, undefined, state)
+  const config: any = {}
+  await hooks.config!(config)
+  expect(config.mcp.chatgpt.command).toEqual(command)
+  const context = fakeContext()
+  const dispose = await setup(context, state)
+  expect((context.mcpEditor.sets[0]![1] as any).command).toEqual(command)
+  await dispose?.()
+  state.binaries = undefined
+  state.binaryError = "Source cache missing; rerun installer"
+  await expect(setup(fakeContext(), state)).rejects.toThrow("rerun installer")
+})
+
 describe("v1 first-install MCP resolution", () => {
   test("waits for binaries before registering the actual MCP command", async () => {
     const state = fakeState()

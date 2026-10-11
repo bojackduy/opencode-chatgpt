@@ -71,8 +71,8 @@ export function buildV2ModelInfo(): Model.Info {
  * v2 MCP server config. Mirrors buildMcpEntry(): local server spawning the
  * managed proxy binary. v2 spells "enabled" as the absence of `disabled`.
  */
-export function buildV2McpConfig(proxyBinary: string): Mcp.ServerConfig {
-  return { type: "local", command: [proxyBinary] }
+export function buildV2McpConfig(proxyBinary: string, args: string[] = []): Mcp.ServerConfig {
+  return { type: "local", command: [proxyBinary, ...args] }
 }
 
 // ─── Minimal structural context (real V2 context + test fakes both fit) ────
@@ -224,6 +224,10 @@ export async function setup(
   const state = injected ?? ensureShared({ ...(context.options as Record<string, unknown>) })
   const opts = state.opts
   const adapterBaseURL = `http://${opts.adapterHost}:${opts.adapterPort}/v1`
+  if (opts.bridgeSource) {
+    await state.ready
+    if (!state.binaries) throw new Error(state.binaryError ?? "Source cache unavailable; rerun installer")
+  }
 
   await context.provider.transform((editor) => {
     registerV2Provider(editor, adapterBaseURL)
@@ -235,7 +239,10 @@ export async function setup(
   const mcpPath = { current: state.binaries?.proxy ?? pendingProxyPath(opts.version) }
   let mcpAdded = false
   await context.mcp.transform((editor) => {
-    if (registerV2Mcp(editor, mcpPath.current)) mcpAdded = true
+    if (opts.bridgeSource && editor.get(MCP_ID) === undefined) {
+      editor.set(MCP_ID, buildV2McpConfig(mcpPath.current, ["-chrome-port", String(opts.cdpPort), "-profile", opts.profileDir]))
+      mcpAdded = true
+    } else if (registerV2Mcp(editor, mcpPath.current)) mcpAdded = true
   })
   void state.ready.then(() => {
     if (!mcpAdded || !state.binaries) return
