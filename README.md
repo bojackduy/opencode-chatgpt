@@ -1,4 +1,4 @@
-# opencode-chatgpt
+# opencode-web-bridges
 
 Use **ChatGPT Web**, through your own logged-in session, as an OpenCode model.
 No API key or launchd units are needed; the default prebuilt mode needs no Go toolchain. ChatGPT account access,
@@ -18,7 +18,7 @@ below needs both distributions; source mode needs the npm package published and
 the chosen bridge commit pushed to GitHub, but no bridge binary release.
 
 ```sh
-npx @bojackduy/opencode-chatgpt install
+npx @bojackduy/opencode-web-bridges install
 ```
 
 Prerequisites: **Node.js >=20 + npm**, **OpenCode v1 or v2**, **Bun >=1.1**
@@ -38,9 +38,9 @@ No source-build fallback is attempted.
 
 ```sh
 # Preview exact config and required release assets, without spawning/downloading/writing:
-npx @bojackduy/opencode-chatgpt install --host v2 --dry-run
+npx @bojackduy/opencode-web-bridges install --host v2 --dry-run
 # Explicit host/version detection override and exact config file:
-npx @bojackduy/opencode-chatgpt install --host v1 --config /path/to/opencode.jsonc
+npx @bojackduy/opencode-web-bridges install --host v1 --config /path/to/opencode.jsonc
 ```
 
 `--host` accepts `v1`, `v2`, or `auto` (default). Dry-run requires an explicit
@@ -60,9 +60,9 @@ Login once in the dedicated Chrome profile, not an API-key dialog.
 ### Explicit source-build mode (test pushed fixes before a binary release)
 
 ```sh
-npx @bojackduy/opencode-chatgpt install --build-from-source --bridge-ref <tag-or-commit>
+npx @bojackduy/opencode-web-bridges install --build-from-source --bridge-ref <tag-or-commit>
 # Offline preview: no GitHub resolution, downloads, Go checks, processes or writes
-npx @bojackduy/opencode-chatgpt install --build-from-source --bridge-ref <tag-or-commit> --host v2 --dry-run
+npx @bojackduy/opencode-web-bridges install --build-from-source --bridge-ref <tag-or-commit> --host v2 --dry-run
 ```
 
 Replace `<tag-or-commit>` with a real GitHub tag or commit. Both flags are required
@@ -107,13 +107,13 @@ their paths separately if you retain them.
 These are independent distributions, not two repositories users must clone:
 
 ```text
-npm: opencode-chatgpt (OpenCode plugin + installer)
+npm: opencode-web-bridges (OpenCode plugin + installer)
   -> GitHub release: chatgpt-proxy (checksum-verified Go executables)
   -> Chrome DevTools Protocol (CDP), dedicated signed-in Chrome profile
   -> ChatGPT Web, subject to the account's access and usage limits
 ```
 
-[`opencode-chatgpt`](https://github.com/bojackduy/opencode-chatgpt) owns OpenCode
+[`opencode-web-bridges`](https://github.com/bojackduy/opencode-web-bridges) owns OpenCode
 integration: runtime model/MCP registration, commands, and process supervision.
 [`chatgpt-proxy`](https://github.com/bojackduy/chatgpt-proxy) owns the reusable Go
 bridge: `chatgpt-openai` exposes the OpenAI-compatible adapter;
@@ -130,7 +130,7 @@ OpenCode v1 (`@opencode-ai/plugin` host):
 ```jsonc
 // opencode.jsonc
 {
-  "plugin": ["@bojackduy/opencode-chatgpt"]
+  "plugin": ["@bojackduy/opencode-web-bridges"]
 }
 ```
 
@@ -138,7 +138,7 @@ With options on current v1 hosts (older v1 schemas support strings only):
 
 ```jsonc
 {
-  "plugin": [["@bojackduy/opencode-chatgpt", { "version": "v0.2.0" }]]
+  "plugin": [["@bojackduy/opencode-web-bridges", { "version": "v0.2.0" }]]
 }
 ```
 
@@ -146,7 +146,7 @@ OpenCode v2 (`@opencode/plugin` host) uses **`plugins`**, not `plugin`:
 
 ```jsonc
 {
-  "plugins": ["@bojackduy/opencode-chatgpt"]
+  "plugins": ["@bojackduy/opencode-web-bridges"]
 }
 ```
 
@@ -154,7 +154,7 @@ With options on v2:
 
 ```jsonc
 {
-  "plugins": [{ "package": "@bojackduy/opencode-chatgpt", "options": { "version": "v0.2.0" } }]
+  "plugins": [{ "package": "@bojackduy/opencode-web-bridges", "options": { "version": "v0.2.0" } }]
 }
 ```
 
@@ -221,9 +221,9 @@ want slash-command shortcuts; installing the npm package does not auto-copy them
 | `maxChars`         | `200000`                 | Per-turn paste budget passed to the adapter (`-max-chars`)     |
 | `projectPerSession`| `false`                  | Set `CHATGPT_BRIDGE_PROJECT_PER_SESSION=1` for the adapter     |
 
-Binaries land in `~/.local/share/opencode-chatgpt/<version>/` on macOS/Linux
-(`%LOCALAPPDATA%\opencode-chatgpt\<version>\` on Windows);
-logs in `~/.local/share/opencode-chatgpt/logs/`.
+Binaries land in `~/.local/share/opencode-web-bridges/<version>/` on macOS/Linux
+(`%LOCALAPPDATA%\opencode-web-bridges\<version>\` on Windows);
+logs in `~/.local/share/opencode-web-bridges/logs/`.
 
 ## Platform support
 
@@ -268,7 +268,7 @@ This uses your personal ChatGPT session (subject to its usage limits).
 ## Publishing (maintainers)
 
 Do not publish from the Go repository. The npm package lives in
-`/Users/duytrinh/Code/opencode-chatgpt`.
+`/Users/duytrinh/Code/opencode-web-bridges`.
 
 **Prerequisite:** `bojackduy/chatgpt-proxy` must have its first GitHub release
 before another machine can download the bridge. Push bridge `main` through its
@@ -280,7 +280,7 @@ The plugin defaults to `latest`; the release must not be draft or prerelease.
 Push plugin `main` to `origin`, then do the **first npm publish manually**, once:
 
 ```sh
-# Run in /Users/duytrinh/Code/opencode-chatgpt, NOT chatgpt-proxy
+# Run in /Users/duytrinh/Code/opencode-web-bridges, NOT chatgpt-proxy
 npm login
 npm publish --access public --provenance=false
 ```
@@ -289,8 +289,8 @@ This runs prepack (typecheck, hermetic tests, build). First publication uses
 your npm login without OIDC provenance; do not run the Actions publish workflow
 until the package exists and its trusted publisher is configured.
 
-On npmjs.com → `@bojackduy/opencode-chatgpt` → Settings → Trusted Publishers,
-add GitHub Actions with owner **`bojackduy`**, repository **`opencode-chatgpt`**,
+On npmjs.com → `@bojackduy/opencode-web-bridges` → Settings → Trusted Publishers,
+add GitHub Actions with owner **`bojackduy`**, repository **`opencode-web-bridges`**,
 workflow **`npm-publish.yml`**, and **no environment** (the workflow has none).
 No `NPM_TOKEN` is needed. Future releases use:
 

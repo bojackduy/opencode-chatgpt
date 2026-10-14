@@ -64,7 +64,7 @@ export async function doctorReport(
     name: `adapter port open (${opts.adapterHost}:${opts.adapterPort})`,
     ok: portOpen,
     detail: portOpen ? "listening" : "not listening",
-    hint: portOpen ? undefined : "Restart opencode — the plugin supervisor spawns the adapter. Check ~/.local/share/opencode-chatgpt/logs/chatgpt-openai.log.",
+    hint: portOpen ? undefined : "Restart opencode — the plugin supervisor spawns the adapter. Check ~/.local/share/opencode-web-bridges/logs/chatgpt-openai.log.",
   })
   const cdp = await probeChromeCDP(opts.cdpPort)
   lines.push({

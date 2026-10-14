@@ -48,7 +48,7 @@ export function currentPlatform(
   if (platform === "win32" && arch === "x64") return "windows-amd64"
   if (platform === "win32" && arch === "arm64") return "windows-arm64"
   throw new Error(
-    `opencode-chatgpt: unsupported platform ${platform}/${arch} — ` +
+    `opencode-web-bridges: unsupported platform ${platform}/${arch} — ` +
       `prebuilt binaries exist for ${SUPPORTED_PLATFORMS.join(", ")} only`,
   )
 }
@@ -84,9 +84,9 @@ export function downloadURL(
 /**
  * Versioned cache dir.
  *
- * - posix (darwin/linux): `~/.local/share/opencode-chatgpt/<version>/`
+ * - posix (darwin/linux): `~/.local/share/opencode-web-bridges/<version>/`
  *   (XDG_DATA_HOME default; `os.homedir()` resolves `~` on every platform).
- * - win32: `%LOCALAPPDATA%/opencode-chatgpt/<version>/`
+ * - win32: `%LOCALAPPDATA%/opencode-web-bridges/<version>/`
  *   (falls back to `~/AppData/Local` when LOCALAPPDATA is unset).
  *
  * `platform`/`env` are injectable so unit tests can cover the win32 branch
@@ -103,9 +103,9 @@ export function cacheDir(
     const base =
       (env["LOCALAPPDATA"]?.trim() ? env["LOCALAPPDATA"]! : undefined) ??
       path.join(os.homedir(), "AppData", "Local")
-    return path.join(base, "opencode-chatgpt", safe)
+    return path.join(base, "opencode-web-bridges", safe)
   }
-  return path.join(os.homedir(), ".local", "share", "opencode-chatgpt", safe)
+  return path.join(os.homedir(), ".local", "share", "opencode-web-bridges", safe)
 }
 
 /**

@@ -1,4 +1,4 @@
-// ─── opencode-chatgpt v2 host entry (opencode v2, `@opencode/plugin`) ───────
+// ─── opencode-web-bridges v2 host entry (opencode v2, `@opencode/plugin`) ───────
 // One build works on v1 AND v2: v1 hosts call `server` (plugin.ts, config
 // hook + tools), v2 hosts call `setup` below (domain transforms + commands).
 // v2 needs no config hook — providers, MCP servers, and commands are
@@ -210,7 +210,7 @@ async function consumeV2Events(
     const ready = await probeReadiness(state.opts.adapterHost, state.opts.adapterPort).catch(() => null)
     if (ready && !ready.ok && /not logged in|401|403/i.test(ready.detail)) {
       state.firstRunNotified = true
-      console.error(`\n[opencode-chatgpt] ───\n${loginInstructions(state.opts)}\n───\n`)
+      console.error(`\n[opencode-web-bridges] ───\n${loginInstructions(state.opts)}\n───\n`)
     }
   }
 }

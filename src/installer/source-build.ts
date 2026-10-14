@@ -83,7 +83,7 @@ export async function buildSource(repo: string, ref: string, platform: PlatformI
   process.once("SIGINT", cancel)
   process.once("SIGTERM", cancel)
   try {
-    temporary = await fs.mkdtemp(path.join(os.tmpdir(), "opencode-chatgpt-source-"))
+    temporary = await fs.mkdtemp(path.join(os.tmpdir(), "opencode-web-bridges-source-"))
     deps.signal?.throwIfAborted()
     const archive = await request(`https://codeload.github.com/${repo}/tar.gz/${source.commit}`)
     if (!archive.body) throw new Error("Empty source response")

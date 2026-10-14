@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Add Node-compatible `npx @bojackduy/opencode-chatgpt install` launcher with v1/v2 host detection, explicit config/host selection and a no-side-effects dry-run.
+- Add Node-compatible `npx @bojackduy/opencode-web-bridges install` launcher with v1/v2 host detection, explicit config/host selection and a no-side-effects dry-run.
 - Preserve JSONC comments, options, manual config and disabled entries; prepare checksum-verified bridge binaries before backed-up atomic config edits.
 - Check Bun/Chrome prerequisites read-only, leaving browser login and process supervision to the plugin after restart. Public use still requires npm publication and the first bridge GitHub release.
 

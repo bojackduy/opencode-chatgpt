@@ -10,11 +10,11 @@ import { buildSource, validateRef } from "./source-build"
 import { sourceBinaries, validateRepo } from "../server/source"
 import { tcpProbe } from "../server/supervisor"
 
-export const HELP = `opencode-chatgpt installer
+export const HELP = `opencode-web-bridges installer
 
-Usage: npx @bojackduy/opencode-chatgpt install [--config PATH] [--host v1|v2|auto] [--dry-run]
-       npx @bojackduy/opencode-chatgpt install --build-from-source --bridge-ref <tag-or-commit>
-       opencode-chatgpt --help
+Usage: npx @bojackduy/opencode-web-bridges install [--config PATH] [--host v1|v2|auto] [--dry-run]
+       npx @bojackduy/opencode-web-bridges install --build-from-source --bridge-ref <tag-or-commit>
+       opencode-web-bridges --help
 
 Registers only the npm plugin; prepares both checksum-verified Go bridge binaries.
 Default: global OpenCode config (OPENCODE_CONFIG_DIR, otherwise XDG_CONFIG_HOME/opencode).
@@ -181,7 +181,7 @@ export async function main(argv = process.argv.slice(2)): Promise<void> {
     if (args === "help") console.log(HELP)
     else await install(args)
   } catch (error) {
-    console.error(`opencode-chatgpt: ${error instanceof Error ? error.message : String(error)}`)
+    console.error(`opencode-web-bridges: ${error instanceof Error ? error.message : String(error)}`)
     process.exitCode = 1
   }
 }

@@ -1,4 +1,4 @@
-// Plugin options for @bojackduy/opencode-chatgpt.
+// Plugin options for @bojackduy/opencode-web-bridges.
 // Every field is optional; all ports/paths/flags are overridable.
 
 import * as os from "node:os"

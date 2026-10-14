@@ -116,7 +116,7 @@ test("actual Node launcher help/dry-run for v1/v2 without Bun/Chrome/network", a
   // Build only the Node installer; the tests never depend on a stale dist.
   const build = spawnSync(process.execPath, ["run", "build:installer"], { cwd: path.resolve(import.meta.dir, ".."), encoding: "utf8", timeout: 10000 })
   expect(build.status).toBe(0)
-  const launcher = path.resolve(import.meta.dir, "../bin/opencode-chatgpt.mjs")
+  const launcher = path.resolve(import.meta.dir, "../bin/opencode-web-bridges.mjs")
   expect((await fs.stat(launcher)).mode & 0o111).not.toBe(0)
   const f = await fixture()
   // Empty PATH proves Node dry-run never needs to execute OpenCode/Bun/Chrome.
@@ -127,7 +127,7 @@ test("actual Node launcher help/dry-run for v1/v2 without Bun/Chrome/network", a
   expect(node).not.toBe("")
   const help = run(["--help"])
   expect(help.status).toBe(0)
-  expect(help.stdout).toContain("npx @bojackduy/opencode-chatgpt install")
+  expect(help.stdout).toContain("npx @bojackduy/opencode-web-bridges install")
   for (const host of ["v1", "v2"]) {
     await fs.writeFile(f.config, `// preserve\n{"${host === "v1" ? "plugin" : "plugins"}": ["other"]}`)
     const result = spawnSync(node, [launcher, "install", "--host", host, "--config", f.config, "--dry-run"], { env, encoding: "utf8", timeout: 10000 })

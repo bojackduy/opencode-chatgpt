@@ -78,14 +78,14 @@ describe("release URLs", () => {
 })
 
 describe("cacheDir", () => {
-  test("is versioned under ~/.local/share/opencode-chatgpt", () => {
-    expect(cacheDir("v0.2.0")).toMatch(/\.local\/share\/opencode-chatgpt\/v0\.2\.0$/)
-    expect(cacheDir("latest")).toMatch(/opencode-chatgpt\/latest$/)
+  test("is versioned under ~/.local/share/opencode-web-bridges", () => {
+    expect(cacheDir("v0.2.0")).toMatch(/\.local\/share\/opencode-web-bridges\/v0\.2\.0$/)
+    expect(cacheDir("latest")).toMatch(/opencode-web-bridges\/latest$/)
   })
 
-  test("win32 uses %LOCALAPPDATA%/opencode-chatgpt/<version>/", () => {
+  test("win32 uses %LOCALAPPDATA%/opencode-web-bridges/<version>/", () => {
     const dir = cacheDir("v0.2.0", "win32", { LOCALAPPDATA: "C:\\Users\\test\\AppData\\Local" })
-    expect(dir).toContain("opencode-chatgpt")
+    expect(dir).toContain("opencode-web-bridges")
     expect(dir).toContain("v0.2.0")
     expect(dir).toContain("C:\\Users\\test\\AppData\\Local")
   })
@@ -93,7 +93,7 @@ describe("cacheDir", () => {
   test("win32 falls back to ~/AppData/Local without LOCALAPPDATA", () => {
     const dir = cacheDir("v0.2.0", "win32", {})
     expect(dir).toContain("AppData")
-    expect(dir).toContain("opencode-chatgpt")
+    expect(dir).toContain("opencode-web-bridges")
     expect(dir.endsWith("v0.2.0")).toBe(true)
   })
 

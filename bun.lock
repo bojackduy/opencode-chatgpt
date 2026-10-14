@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "@bojackduy/opencode-chatgpt",
+      "name": "@bojackduy/opencode-web-bridges",
       "dependencies": {
         "jsonc-parser": "^3.3.1",
       },

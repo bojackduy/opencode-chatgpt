@@ -40,7 +40,7 @@ export function ensureShared(rawOptions: Record<string, unknown> | undefined): S
     })
     .catch((error) => {
       state.binaryError = error instanceof Error ? error.message : String(error)
-      console.error(`[opencode-chatgpt] managed binary setup failed: ${state.binaryError}`)
+      console.error(`[opencode-web-bridges] managed binary setup failed: ${state.binaryError}`)
     })
     .then(() => {})
   shared = state

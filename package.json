@@ -1,6 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
-  "name": "@bojackduy/opencode-chatgpt",
+  "name": "@bojackduy/opencode-web-bridges",
   "version": "0.1.0",
   "description": "OpenCode plugin that installs the chatgpt-proxy ChatGPT browser bridge with one line in the plugin array — managed binaries, provider + MCP config injection, Chrome CDP supervision.",
   "type": "module",
@@ -8,7 +8,7 @@
   "private": false,
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/bojackduy/opencode-chatgpt.git"
+    "url": "git+https://github.com/bojackduy/opencode-web-bridges.git"
   },
   "keywords": [
     "opencode",
@@ -34,7 +34,7 @@
     "bun": ">=1.1.0"
   },
   "bin": {
-    "opencode-chatgpt": "./bin/opencode-chatgpt.mjs"
+    "opencode-web-bridges": "./bin/opencode-web-bridges.mjs"
   },
   "exports": {
     ".": {

@@ -2,7 +2,7 @@ import { applyEdits, findNodeAtLocation, modify, parseTree, printParseErrorCode,
 import * as os from "node:os"
 import * as path from "node:path"
 
-export const PACKAGE = "@bojackduy/opencode-chatgpt"
+export const PACKAGE = "@bojackduy/opencode-web-bridges"
 export type Host = "v1" | "v2"
 const object = (v: unknown): v is Record<string, unknown> => !!v && typeof v === "object" && !Array.isArray(v)
 const matches = (s: unknown): boolean => typeof s === "string" && (s === PACKAGE || s.startsWith(`${PACKAGE}@`))

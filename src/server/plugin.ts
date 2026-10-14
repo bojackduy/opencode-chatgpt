@@ -1,4 +1,4 @@
-// ─── opencode-chatgpt Server Plugin Entry ────────────────────────────────────
+// ─── opencode-web-bridges Server Plugin Entry ────────────────────────────────────
 // Installs the chatgpt-proxy ChatGPT browser bridge with one line in the
 // user's `plugin` array: managed binaries + provider/MCP config injection +
 // adapter/Chrome supervision + login UX. Never touches the user's live setup
@@ -21,7 +21,7 @@ import {
 import { doctorReport, formatDoctor, loginFlow, statusReport } from "./tools"
 import { setup as setupV2 } from "./v2"
 
-const PLUGIN_ID = "opencode-chatgpt"
+const PLUGIN_ID = "opencode-web-bridges"
 
 const server = async (
   _input: PluginInput,
