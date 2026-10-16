@@ -20,6 +20,7 @@ import {
 } from "./supervisor"
 import { doctorReport, formatDoctor, loginFlow, statusReport } from "./tools"
 import { setup as setupV2 } from "./v2"
+import { resolveGemini, applyGeminiConfig } from "./gemini"
 
 const PLUGIN_ID = "opencode-web-bridges"
 
@@ -28,15 +29,23 @@ const server = async (
   pluginOptions: PluginOptions | undefined,
   injected?: SharedState,
 ): Promise<Hooks> => {
+  // Gemini-only registration can coexist with an existing manual ChatGPT
+  // service without starting ChatGPT's binary manager or supervisor.
+  if (pluginOptions?.chatgpt === false) {
+    const gemini = resolveGemini(pluginOptions.gemini)
+    return { config: async config => { if (gemini) applyGeminiConfig(config as unknown as Record<string, any>, gemini) } }
+  }
   // Background binary ensure + supervision, started once per process and
   // shared with the v2 setup path. Never blocks plugin setup on download.
   const state = injected ?? ensureShared(pluginOptions)
   const opts = state.opts
+  const gemini = resolveGemini(pluginOptions?.gemini)
 
   const adapterBaseURL = `http://${opts.adapterHost}:${opts.adapterPort}/v1`
   const hooks: Hooks = {
     config: async (config) => {
       const cfg = config as unknown as Record<string, any>
+      if (gemini) applyGeminiConfig(cfg, gemini)
       // v1 cannot reload the injected MCP command after a background download.
       // Resolve it before registration; existing manual MCP entries need no wait.
       if (cfg.mcp?.[MCP_ID] === undefined) {

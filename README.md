@@ -10,6 +10,53 @@ The plugin manages everything: it downloads the
 injects the provider + MCP config, keeps the adapter and Chrome alive, and
 guides first-run login.
 
+## Optional Gemini Web — local build, explicit opt-in
+
+Gemini is available as a second **text-only** browser engine. Its release assets
+are not published: build locally, do not assume the ChatGPT release downloader
+can fetch Gemini. The default ChatGPT behavior remains unchanged.
+
+```sh
+go -C gemini-proxy build -o bin/gemini-openai ./cmd/gemini-openai
+go -C gemini-proxy build -o bin/gemini-proxy ./cmd/gemini-mcp
+./gemini-proxy/bin/gemini-openai -addr 127.0.0.1:8789 -chrome-port 9223 -profile "$HOME/.gemini-proxy"
+```
+
+Use a local parent plugin entry with these options (v1: `[package, options]`;
+v2: `{ "package": package, "options": options }`):
+
+```json
+{
+  "chatgpt": false,
+  "gemini": {
+    "proxyBinary": "/absolute/path/opencode-web-bridges/gemini-proxy/bin/gemini-proxy"
+  }
+}
+```
+
+`chatgpt: false` disables this plugin's ChatGPT registration/binary management
+when an existing manual ChatGPT setup owns that service. Omit it to retain the
+normal ChatGPT lifecycle. Gemini itself uses an **externally managed adapter**,
+not a second plugin supervisor. Optional Gemini fields: `adapterBaseURL`
+(default `http://127.0.0.1:8789/v1`, loopback only), absolute `profileDir`
+(default `~/.gemini-proxy`), and `cdpPort` (default 9223). Provider and MCP
+registration fills missing entries only. No global default model is changed.
+
+Quit and restart OpenCode, then select **`gemini-web/gemini-web`**. On v2 the
+plugin registers the provider through the provider domain using
+`@opencode/ai/providers/openai-compatible`; it does not rely on a legacy SDK
+package provider being converted correctly. MCP `gemini` runs the local binary
+with explicit profile/port arguments.
+
+Live verified on macOS with signed-in Vietnamese Gemini UI: exact Quill document
+typing, marker and same-thread recall, exact-request cached completion identity.
+Isolation uses its own tabs, profile and CDP port; wrong-profile listeners fail
+closed. CDP focus emulation keeps only the owned page active so code-block
+animations finish without stealing OS keyboard focus. This is **not full ChatGPT parity**: no projects, parallel browser
+sessions, media inputs, chunked replay, or recovery UX. Streaming is buffered SSE,
+not incremental generation. Windows profile verification is currently unsupported;
+Linux and Windows have not been live verified.
+
 ## Install
 
 **Publication status:** this npm package is not published yet, and the bridge's
